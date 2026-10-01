@@ -3,6 +3,7 @@ import json
 import urllib3
 import urllib.parse
 import os
+from base64 import b64decode
 from dotenv import load_dotenv
 
 # Load .env into environment
@@ -19,10 +20,12 @@ supported_files = (
     ".java",
     ".cs")
 
-def request_from_git_api(url):
+def request_data_from_git_url(url):
     response = http.request(method = 'GET', url = url, headers = {"Authorization" : f"Bearer {git_token}"})
     if response.status == 200:
-        return response
+        data_raw = response.data
+        data = json.loads(data_raw)
+        return data
     else:
         print(f"GitHub API request for {url} failed. Status: {response.status}")
         return None
@@ -44,29 +47,32 @@ def get_repo_path(repo_url):
 
 def get_default_branch(repo_path):
     api_url = f"https://api.github.com/repos{repo_path}"
-    api_response = request_from_git_api(api_url)
-    if api_response is not None:
-        data_raw = api_response.data
-        data = json.loads(data_raw)
-        branch = data["default_branch"]
-        return branch
+    api_data = request_data_from_git_url(api_url)
+    branch = api_data["default_branch"]
+    return branch
 
 def get_tree_sha(repo_path, branch):
     branch_url = f"https://api.github.com/repos{repo_path}/branches/{branch}"
-    branch_response = request_from_git_api(branch_url)
-    if branch_response is not None:
-        data_raw = branch_response.data
-        data = json.loads(data_raw)
-        sha = data["commit"]["commit"]["tree"]["sha"]
-        return sha
+    branch_data = request_data_from_git_url(branch_url)
+    sha = branch_data["commit"]["commit"]["tree"]["sha"]
+    return sha
 
 def get_repo_tree(repo_path, branch, sha):
     tree_url = f"https://api.github.com/repos{repo_path}/git/trees/{sha}?recursive=true"
-    tree_response = request_from_git_api(tree_url)
-    if tree_response is not None:
-        data_raw = tree_response.data
-        data = json.loads(data_raw)
-        return data
+    tree_data = request_data_from_git_url(tree_url)
+    return tree_data["tree"]
+
+def get_tree_file_contents(tree):
+    files = {}
+    for item in tree:
+        path = item["path"]
+        item_type = item["type"]
+        if item_type == "blob" and path.endswith(supported_files):
+            url = item["url"]
+            data = request_data_from_git_url(url)
+            contents = b64decode(data["content"]) # Git API encodes blob contents as base 64.
+            files[path] = contents.decode("utf-8") # Convert from bytes type to string type for more readable format.
+    return files
 
 http = urllib3.PoolManager()
 
@@ -75,8 +81,6 @@ url = input("Enter a GitHub repo link: ")
 path = get_repo_path(url)
 branch = get_default_branch(path)
 sha = get_tree_sha(path, branch)
-
 tree = get_repo_tree(path, branch, sha)
 
-for item in tree["tree"]:
-    print(item["path"], item["type"], "\n")
+files = get_tree_file_contents(tree)
