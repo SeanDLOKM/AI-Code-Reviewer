@@ -3,12 +3,14 @@ import json
 import urllib3
 import urllib.parse
 import os
+from google import genai
 from base64 import b64decode
 from dotenv import load_dotenv
 
 # Load .env into environment
 load_dotenv()
 git_token = os.getenv("GIT_TOKEN")
+gemini_token = os.getenv("GEMINI_API_KEY")
 
 supported_files = (
     ".py",
@@ -75,12 +77,25 @@ def get_tree_file_contents(tree):
     return files
 
 http = urllib3.PoolManager()
-
 url = input("Enter a GitHub repo link: ")
-
 path = get_repo_path(url)
 branch = get_default_branch(path)
 sha = get_tree_sha(path, branch)
 tree = get_repo_tree(path, branch, sha)
-
 files = get_tree_file_contents(tree)
+
+for filename, contents in files.items():
+    print(filename, contents, "\n\n", sep = "\n")
+
+### Testing LLM integration.
+testpath = "app/converter.py"
+prompt = f"""You are reviewing a Python source file.
+
+File path: {testpath}
+
+File contents:
+{files[testpath]}"""
+
+client = genai.Client(api_key = gemini_token)
+response = client.models.generate_content(model = "gemini-3.1-flash-lite", contents = prompt)
+print(response.text)
