@@ -1,11 +1,15 @@
+import logging
 import traceback
 import json
 import urllib3
 import urllib.parse
 import os
 from google import genai
+from google.genai import types
 from base64 import b64decode
 from dotenv import load_dotenv
+
+logger = logging.getLogger(__name__)
 
 # Load .env into environment
 load_dotenv()
@@ -109,40 +113,41 @@ class GitRepo():
         self.files = self.get_tree_file_contents()
         return True
 
-def create_file_chunks(files, max_chars = 50000):
-    current_chunk = ""
-    chunks = []
-    for filepath, contents in files.items():
-        if len(contents) == 0:
-            continue
-        file_text = f"""
+class Review():
+    def __init__(self, client, files):
+        self.files = files
+        self.client = client
+        self.file_chunks = None
+         
+    def create_file_chunks(self, max_chars = 50000):
+        current_chunk = ""
+        chunks = []
+        for filepath, contents in self.files.items():
+            if len(contents) == 0:
+                continue
+            file_text = f"""
 File path: {filepath}
 
 Contents:
 
 {contents}
 """
-        if current_chunk == "":
-            current_chunk = file_text
-            continue
-        if len(current_chunk) + len(file_text) > max_chars:
+            if current_chunk == "":
+                current_chunk = file_text
+                continue
+            if len(current_chunk) + len(file_text) > max_chars:
+                chunks.append(current_chunk)
+                current_chunk = ""
+
+            current_chunk += file_text
+        if current_chunk:
             chunks.append(current_chunk)
-            current_chunk = ""
+        return chunks
 
-        current_chunk += file_text
-    if current_chunk:
-        chunks.append(current_chunk)
-    return chunks
-
-url = input("Enter a GitHub repo link: ")
-
-review = GitRepo(url)
-client = genai.Client(api_key = gemini_token)
-
-if review.load_repo():
-    chunks = create_file_chunks(review.files)
-    for chunk in chunks:
-        prompt = f"""The following text contains code from one or more files in a Github repository. Review the files. For each issue, return its:
+    def start_review(self):
+        self.file_chunks = self.create_file_chunks()
+        for chunk in self.file_chunks:
+            prompt = f"""The following text contains code from one or more files in a Github repository. Review the files. For each issue, return its:
 - Path and line number
 - Category
 - Severity
@@ -150,6 +155,32 @@ if review.load_repo():
 - Suggested improvement
 
 {chunk}"""
-        response = client.models.generate_content(model = "gemini-3.1-flash-lite", contents = prompt)
-        print(response.text)
-        break
+            response = self.client.models.generate_content(model = "gemini-3.1-flash-lite", contents = prompt)
+            print(response.text)
+        
+def main():
+    logging.basicConfig(filename = 'reviewer.log', level = logging.INFO)
+    logger.info('Started')
+    
+    url = input("Enter a GitHub repo link: ")
+
+    repo = GitRepo(url)
+
+    client = genai.Client(
+        api_key = gemini_token,
+        http_options = types.HttpOptions(
+            retry_options = types.HttpRetryOptions(
+                initial_delay = 10.0,
+                attempts = 5,
+                max_delay = 60,
+                http_status_codes = [408, 429, 500, 502, 503, 504]
+                )))
+
+    if repo.load_repo():
+        review = Review(client, repo.files)
+        review.start_review()
+
+    logger.info('Finished')
+
+if __name__ == '__main__':
+    main()
