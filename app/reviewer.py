@@ -6,6 +6,9 @@ import urllib.parse
 import os
 from google import genai
 from google.genai import types
+from pydantic import BaseModel, Field
+from typing import List, Optional
+from enum import Enum
 from base64 import b64decode
 from dotenv import load_dotenv
 
@@ -83,7 +86,7 @@ class GitRepo():
         return sha
 
     def get_repo_tree(self):
-        tree_url = f"https://api.github.com/repos{self.repo_path}/git/trees/{self.sha}?recursive=true"
+        tree_url = f"https://api.github.com/repos{self.repo_path}/git/trees/{self.tree_sha}?recursive=true"
         tree_data = self.request_data(tree_url)
         return tree_data["tree"]
 
@@ -108,16 +111,46 @@ class GitRepo():
             return False
         self.name = self.repo_data["name"]
         self.branch = self.repo_data["default_branch"]
-        self.sha = self.get_tree_sha()
+        self.tree_sha = self.get_tree_sha()
         self.tree = self.get_repo_tree()
         self.files = self.get_tree_file_contents()
         return True
+
+class Severity(Enum):
+    LOW = "Low"
+    MEDIUM = "Medium"
+    HIGH = "High"
+
+class Category(Enum):
+    PERFORMANCE = "Performance"
+    SECURITY = "Security"
+    BUG = "Bug"
+    ERROR_HANDLING = "Error Handling"
+    READABILITY = "Readability"
+    RELIABILITY = "Reliability"
+    MAINTAINABILITY = "Maintainability"
+    ARCHITECTURE_DESIGN = "Architecture/Design"
+    TESTING = "Testing"
+    OTHER = "Other"
+
+class Issue(BaseModel):
+    file_path: str = Field(description = "Path of file being reviewed, can be found before the beginning of \"Contents\" section.")
+    line_start: int = Field(description = "First line number of code associated with the issue.")
+    line_end: int = Field(description = "Final line number of code associated with the issue.")
+    category: Category = Field(description = "Category that the issue most closely relates to.")
+    severity: Severity = Field(description = "How impactful the issue is on the quality of the overall code. High severity issues have a significant negative impact on the quality/consistency of the code.")
+    description: str = Field(description = "Description of the issue, how it negatively impacts the code, and why.")
+    suggestion: str = Field(description = "Suggested changes to make to resolve the issue.")
+
+class ReviewResult(BaseModel):
+    issues: List[Issue]
 
 class Review():
     def __init__(self, client, files):
         self.files = files
         self.client = client
         self.file_chunks = None
+        self.result = None
          
     def create_file_chunks(self, max_chars = 50000):
         current_chunk = ""
@@ -146,18 +179,49 @@ Contents:
 
     def start_review(self):
         self.file_chunks = self.create_file_chunks()
+        self.result = ReviewResult(issues = [])
         for chunk in self.file_chunks:
             prompt = f"""The following text contains code from one or more files in a Github repository. Review the files. For each issue, return its:
-- Path and line number
+- Path
+- Start line number
+- End line number
 - Category
 - Severity
 - Description
 - Suggested improvement
 
 {chunk}"""
-            response = self.client.models.generate_content(model = "gemini-3.1-flash-lite", contents = prompt)
-            print(response.text)
-        
+            response = self.client.models.generate_content(
+                model = "gemini-3.1-flash-lite",
+                contents = prompt,
+                config = types.GenerateContentConfig(
+                    response_mime_type = "application/json",
+                    response_schema = ReviewResult
+                    )
+                )
+            self.result.issues.extend(response.parsed.issues)
+
+    def display_results(self):
+        for issue in self.result.issues:
+            if issue.line_start == issue.line_end:
+                lines_text = f"Line: {issue.line_start}"
+            else:
+                lines_text = f"Lines: {issue.line_start}-{issue.line_end}"
+
+            print(f"""Path: {issue.file_path}
+{lines_text}
+
+Category: {issue.category.value}
+Severity: {issue.severity.value}
+
+Description:
+{issue.description}
+
+Suggested Changes:
+{issue.suggestion}
+
+""")
+       
 def main():
     logging.basicConfig(filename = 'reviewer.log', level = logging.INFO)
     logger.info('Started')
@@ -174,11 +238,14 @@ def main():
                 attempts = 5,
                 max_delay = 60,
                 http_status_codes = [408, 429, 500, 502, 503, 504]
-                )))
+                )
+            )
+        )
 
     if repo.load_repo():
         review = Review(client, repo.files)
         review.start_review()
+        review.display_results()
 
     logger.info('Finished')
 
