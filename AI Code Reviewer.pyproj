@@ -22,7 +22,11 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="app\git_repo.py" />
+    <Compile Include="app\models.py" />
+    <Compile Include="app\review.py" />
     <Compile Include="app\routes.py" />
+    <Compile Include="app\utils.py" />
     <Compile Include="app\__init__.py" />
     <Compile Include="config.py" />
     <Compile Include="app\reviewer.py" />
