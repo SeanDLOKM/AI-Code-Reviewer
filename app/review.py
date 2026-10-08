@@ -72,7 +72,7 @@ Contents:
             if response is not None:
                 self.result.issues.extend(response.parsed.issues)
 
-    def get_issues(self):
+    def get_issues(self): # For debugging
         all_issues = []
         for issue in self.result.issues:
             if issue.line_start == issue.line_end:

@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block content %}
+<section>
+    <p>
+        {{ summary }}
+    </p>
+    <p>Here is a list of issues with the code found in the repository:</p>
+    {% for issue in issues %}
+    <ul>
+        <li>
+            <p>{{ issue.file_path }}</p>
+            {% if issue.line_start == issue.line_end %}
+                <p>Line: {{ issue.line_start }}</p>
+            {% else %}
+                <p>Lines: {{ issue.line_start }}-{{ issue.line_end }}</p>
+            {% endif %}
+            <p>Category: {{ issue.category.value }}</p>
+            <p>Severity: {{ issue.severity.value }}</p>
+            <p>Description: {{ issue.description }}</p>
+            <p>Suggested changes: {{ issue.suggestion }}</p>
+        </li>
+    </ul>
+    {% endfor %}
+</section>
+{% endblock %}

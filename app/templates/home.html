@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block content %}
+<section>
+    <p>Welcome to the GitHub Repository Reviewer, powered by Google Gemini's API</p>
+</section>
+<form method="POST">
+    {{ form.hidden_tag() }}
+
+    {{ form.repo_url.label }}
+    {{ form.repo_url() }} <br /><br />
+
+    {{ form.submit() }}
+</form>
+{% endblock %}

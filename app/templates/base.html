@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <title>{% block title %} Repository Reviewer {% endblock %}</title>
+</head>
+<body>
+    <header>
+        <h1>Repository Reviewer</h1>
+    </header>
+    <main>
+        <section>
+            {% for message in get_flashed_messages() %}
+                <div class="flash">{{ message }}</div>
+            {% endfor %}
+        </section>
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>

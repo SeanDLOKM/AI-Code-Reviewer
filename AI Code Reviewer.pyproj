@@ -22,6 +22,7 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="app\forms.py" />
     <Compile Include="app\git_repo.py" />
     <Compile Include="app\models.py" />
     <Compile Include="app\review.py" />
@@ -44,6 +45,10 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include=".env" />
+    <Content Include="app\templates\base.html" />
+    <Content Include="app\templates\review_results.html" />
+    <Content Include="app\templates\template.html" />
+    <Content Include="app\templates\home.html" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="app\" />

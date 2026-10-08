@@ -23,7 +23,7 @@ class Issue(BaseModel):
     line_start: int = Field(description = "First line number of code associated with the issue.")
     line_end: int = Field(description = "Final line number of code associated with the issue.")
     category: Category = Field(description = "Category that the issue most closely relates to.")
-    severity: Severity = Field(description = "How impactful the issue is on the quality of the overall code. High severity issues have a significant negative impact on the quality/consistency of the code.")
+    severity: Severity = Field(description = "How impactful the issue is on the quality of the overall code. Issues should be labelled high severity only if they should be urgently fixed.")
     description: str = Field(description = "Description of the issue, how it negatively impacts the code, and why.")
     suggestion: str = Field(description = "Suggested changes to make to resolve the issue.")
 
