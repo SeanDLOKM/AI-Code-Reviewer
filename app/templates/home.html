@@ -5,10 +5,6 @@
 </section>
 <form method="POST">
     {{ form.hidden_tag() }}
-
-    {{ form.repo_url.label }}
-    {{ form.repo_url() }} <br /><br />
-
-    {{ form.submit() }}
+    <div class="repo-form">{{ form.repo_url() }} {{ form.submit() }}</div>
 </form>
 {% endblock %}

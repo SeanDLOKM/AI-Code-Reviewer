@@ -4,7 +4,8 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>fb3b435a-d2dc-485f-8db4-448d9f2380cd</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>app\reviewer.py</StartupFile>
+    <StartupFile>
+    </StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -30,7 +31,6 @@
     <Compile Include="app\utils.py" />
     <Compile Include="app\__init__.py" />
     <Compile Include="config.py" />
-    <Compile Include="app\reviewer.py" />
   </ItemGroup>
   <ItemGroup>
     <Interpreter Include="env\">

@@ -19,6 +19,6 @@ def home():
             if summary is not None:
                 return render_template("review_results.html", issues = issues, summary = summary)
         else:
-            flash("Failed to load repo.")
+            flash(repo.last_error)
 
     return render_template("home.html", form = form)

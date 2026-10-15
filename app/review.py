@@ -60,7 +60,7 @@ Contents:
             return response
         except Exception as e:
             logger.exception(f"Gemini API request failed: {e}")
-            print(f"Unable to review chunk - Gemini service experiencing unavailability: {e}")
+            # print(f"Unable to review chunk - Gemini service experiencing unavailability: {e}")
             return None
 
     @timer
