@@ -5,7 +5,7 @@
     <title>{% block title %} Repository Reviewer {% endblock %}</title>
     <link rel="stylesheet" href="{{url_for('static', filename='styles.css')}}"/>
 </head>
-<body class="container">
+<body>
     <header>
         <h1>Repository Reviewer</h1>
     </header>
@@ -17,5 +17,6 @@
         </section>
         {% block content %}{% endblock %}
     </main>
+    <script src="{{ url_for('static', filename='loading.js') }}"></script>
 </body>
 </html>

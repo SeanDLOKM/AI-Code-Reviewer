@@ -11,7 +11,6 @@ def home():
     if form.validate_on_submit():
         repo = GitRepo(form.repo_url.data)
         if repo.load_repo():
-            flash("Successfully loaded repo.")
             review = Review(client, repo.files)
             review.start_review()
             issues = review.result.issues

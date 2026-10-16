@@ -4,7 +4,20 @@ body {
     margin: 0;
     padding: 0;
     color: black;
-    height: 75vh;
+    min-height: 100vh;
+    height: auto;
+}
+
+p {
+    padding: 2px;
+}
+
+li {
+    list-style-type: none;
+    border: 1px solid #ff4340;
+    background-color: #ffa7a6;
+    border-radius: 5px;
+    margin-bottom: 30px;
 }
 
 .container {
@@ -13,6 +26,22 @@ body {
     align-items: center;
     justify-content: center;
     text-align: center;
+}
+
+.results-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.summary { /* Overrides the .container - for summary paragraph */
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0 50px;
+    text-align: left;
 }
 
 .flash {

@@ -99,7 +99,7 @@ Suggested Changes:
         issues_text = """"""
         for issue in self.get_issues():
             issues_text += issue
-        prompt = f"""Using the issues gathered for this GitHub repository, create a summary evaluation of the whole repository.
+        prompt = f"""Using the issues gathered for this GitHub repository, create a summary evaluation of the whole repository. The summary should include plain text only, no formatting.
 
 {issues_text}"""
         try:
